@@ -222,13 +222,19 @@ class ResourceSwaggerMapping(object):
         detail_uri_name = getattr(self.resource._meta, "detail_uri_name", "pk")
         return detail_uri_name == "pk" and "id" or detail_uri_name
 
+    def _detail_uri_type(self):
+        return getattr(self.resource._meta, "detail_uri_type", "int")
+
+    def _detail_uri_description(self):
+        return getattr(self.resource._meta, "detail_uri_description", "ID of resource")
+
     def build_parameters_from_extra_action(self, method, fields, resource_type):
         parameters = []
         if method.upper() == 'GET' or resource_type == "view":
             parameters.append(self.build_parameter(paramType='path',
                 name=self._detail_uri_name(),
-                dataType='int',
-                description='ID of resource'))
+                dataType=self._detail_uri_type(),
+                description=self._detail_uri_description()))
         for name, field in fields.items():
             parameters.append(self.build_parameter(
                 paramType="query",
@@ -259,7 +265,7 @@ class ResourceSwaggerMapping(object):
         operation = {
             'summary': self.get_operation_summary(detail=True, method=method),
             'httpMethod': method.upper(),
-            'parameters': [self.build_parameter(paramType='path', name=self._detail_uri_name(), dataType='int', description='ID of resource')],
+            'parameters': [self.build_parameter(paramType='path', name=self._detail_uri_name(), dataType=self._detail_uri_type(), description=self._detail_uri_description())],
             'responseClass': self.resource_name,
             'nickname': '%s-detail' % self.resource_name,
             'notes': self.resource.__doc__,
