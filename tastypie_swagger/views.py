@@ -114,7 +114,7 @@ class SchemaView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
 
         context = super(SchemaView, self).get_context_data(*args, **kwargs)
         context.update({
-            'basePath': self.request.build_absolute_uri(reverse('tastypie_swagger:schema')),
+            'basePath': self.request.build_absolute_uri('/').rstrip('/'),
             'apis': mapping.build_apis(),
             'models': mapping.build_models()
         })
