@@ -418,16 +418,16 @@ class ResourceSwaggerMapping(object):
         # Build properties added by list view in the meta section by tastypie
         meta_properties = {}
         meta_properties.update(
-            self.build_property('limit','int', 'Specify the number of element to display per page.')
+            self.build_property('limit','int', 'Specify the number of element to display per page')
         )
         meta_properties.update(
-            self.build_property('next','string', 'Uri of the next page relative to the current page settings.')
+            self.build_property('next','string', 'Uri of the next page relative to the current page settings')
         )
         meta_properties.update(
-            self.build_property('offset','int', 'Specify the offset to start displaying element on a page.')
+            self.build_property('offset','int', 'Specify the offset to start displaying element on a page')
         )
         meta_properties.update(
-            self.build_property('previous','string', 'Uri of the previous page relative to the current page settings.')
+            self.build_property('previous','string', 'Uri of the previous page relative to the current page settings')
         )
         meta_properties.update(
             self.build_property('total_count','int', 'Total items count for the all collection')
