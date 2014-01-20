@@ -169,12 +169,24 @@ class ResourceSwaggerMapping(object):
                                 field = QUERY_TERMS
 
                     elif field == ALL_WITH_RELATIONS: # Show all params from related model
-                        # Add a subset of filter only foreign-key compatible on the relation itself.
-                        # We assume foreign keys are only int based.
-                        field = ['gt','in','gte', 'lt', 'lte','exact'] # TODO This could be extended by checking the actual type of the relational field, but afaik it's also an issue on tastypie.
-                        related_resource = self.resource.fields[name].get_related_resource(None)
-                        related_mapping = ResourceSwaggerMapping(related_resource)
-                        parameters.extend(related_mapping.build_parameters_from_filters(prefix="%s%s__" % (prefix, name)))
+                        if getattr(self.resource._meta, 'custom_filtering', None) is not None and \
+                            name in self.resource._meta.custom_filtering:
+                            for custom_filter in self.resource._meta.custom_filtering[name]:
+                                for custom_name, custom_field in custom_filter.iteritems():
+                                    parameters.append(self.build_parameter(
+                                        paramType="query",
+                                        name=custom_name,
+                                        dataType=custom_field['dataType'],
+                                        required=False,
+                                        description=force_unicode(custom_field['description']),
+                                    ))
+                        else:
+                            # Add a subset of filter only foreign-key compatible on the relation itself.
+                            # We assume foreign keys are only int based.
+                            field = ['gt','in','gte', 'lt', 'lte','exact'] # TODO This could be extended by checking the actual type of the relational field, but afaik it's also an issue on tastypie.
+                            related_resource = self.resource.fields[name].get_related_resource(None)
+                            related_mapping = ResourceSwaggerMapping(related_resource)
+                            parameters.extend(related_mapping.build_parameters_from_filters(prefix="%s%s__" % (prefix, name)))
 
                 if isinstance( field, list ):
                     # Skip if this is an incorrect filter
