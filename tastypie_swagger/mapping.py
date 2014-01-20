@@ -393,11 +393,21 @@ class ResourceSwaggerMapping(object):
             )
         return properties
 
-    def build_model(self, resource_name, id, properties):
+    def build_required_properties_from_fields(self):
+        properties = []
+
+        for name, field in self.schema['fields'].items():
+            if field.get('blank'):
+                continue
+            properties.append(name)
+        return properties
+
+    def build_model(self, resource_name, id, properties, required=None):
         return {
             resource_name: {
                 'properties': properties,
-                'id': id
+                'id': id,
+                'required': required
             }
         }
 
@@ -427,7 +437,8 @@ class ResourceSwaggerMapping(object):
             self.build_model(
                 'Meta',
                 'Meta',
-                meta_properties
+                meta_properties,
+                required=meta_properties.keys()
             )
         )
 
@@ -460,7 +471,8 @@ class ResourceSwaggerMapping(object):
             self.build_model(
                 'ListView',
                 'ListView',
-                list_properties
+                list_properties,
+                required=list_properties.keys()
             )
         )
 
@@ -479,6 +491,7 @@ class ResourceSwaggerMapping(object):
                 self.build_model(
                     resource_name='%s_post' % self.resource._meta.resource_name,
                     properties=self.build_properties_from_fields(method='post'),
+                    required=self.build_required_properties_from_fields(),
                     id='%s_post' % self.resource_name
                 )
             )
@@ -488,6 +501,7 @@ class ResourceSwaggerMapping(object):
                 self.build_model(
                     resource_name='%s_put' % self.resource._meta.resource_name,
                     properties=self.build_properties_from_fields(method='put'),
+                    required=self.build_required_properties_from_fields(),
                     id='%s_put' % self.resource_name
                 )
             )
@@ -497,6 +511,7 @@ class ResourceSwaggerMapping(object):
             self.build_model(
                 resource_name=self.resource._meta.resource_name,
                 properties=self.build_properties_from_fields(),
+                required=self.build_required_properties_from_fields(),
                 id=self.resource_name
             )
         )
