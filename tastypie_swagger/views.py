@@ -41,7 +41,7 @@ class SwaggerApiDataMixin(object):
         context.update({
             # TODO: How should versions be controlled?
             'apiVersion': '0.1',
-            'swaggerVersion': '1.1',
+            'swaggerVersion': '1.2',
         })
         return context
 
@@ -90,7 +90,6 @@ class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
         excluded_resources = getattr(settings, 'TASTYPIE_SWAGGER_EXCLUDED_RESOURCES', [])
         apis = [{'path': '/%s' % name} for name in sorted(self.tastypie_api._registry.keys()) if name not in excluded_resources]
         context.update({
-            'basePath': self.request.build_absolute_uri(reverse('tastypie_swagger:schema')),
             'apis': apis,
         })
         return context
@@ -115,7 +114,7 @@ class SchemaView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
 
         context = super(SchemaView, self).get_context_data(*args, **kwargs)
         context.update({
-            'basePath': '/',
+            'basePath': self.request.build_absolute_uri(reverse('tastypie_swagger:schema')),
             'apis': mapping.build_apis(),
             'models': mapping.build_models()
         })
