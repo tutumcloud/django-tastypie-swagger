@@ -76,7 +76,7 @@ class ResourceSwaggerMapping(object):
         else:
             raise AttributeError('Resource %(resource)s has neither get_resource_list_uri nor get_resource_uri' % {'resource': self.resource})
 
-    def build_parameter(self, paramType='body', name='', dataType='', required=True, description='', allowed_values = None):
+    def build_parameter(self, paramType='body', name='', dataType='', required=True, description=''):
         parameter = {
             'paramType': paramType,
             'name': name,
@@ -85,10 +85,9 @@ class ResourceSwaggerMapping(object):
             'description': description,
         }
 
-        # TODO make use of this to Implement the allowable_values of swagger (https://github.com/wordnik/swagger-core/wiki/Datatypes) at the field level.
-        # This could be added to the meta value of the resource to specify enum-like or range data on a field.
-#        if allowed_values:
-#            parameter.update({'allowableValues': allowed_values})
+        if hasattr(self.resource._meta, 'fields_enum'):
+            if name in self.resource._meta.fields_enum:
+                parameter.update({'enum': self.resource._meta.fields_enum[name]})
         return parameter
 
     def build_parameters_from_fields(self):
@@ -376,6 +375,10 @@ class ResourceSwaggerMapping(object):
 
         if type == 'List':
             prop[name]['items'] = {'$ref': name}
+
+        if hasattr(self.resource._meta, 'fields_enum'):
+            if name in self.resource._meta.fields_enum:
+                prop[name].update({'enum': self.resource._meta.fields_enum[name]})
 
         return prop
 
