@@ -296,6 +296,18 @@ class ResourceSwaggerMapping(object):
     def build_extra_operation(self, extra_action):
         if "name" not in extra_action:
             raise LookupError("\"name\" is a required field in extra_actions.")
+
+        if "response_class" in extra_action:
+            if isinstance(extra_action["response_class"], str):
+                response_class = extra_action["response_class"]
+            else:
+                response_class = "%s_%s" % (self.resource._meta.resource_name, extra_action["name"])
+        else:
+            if getattr(self.resource._meta, "always_return_data", False):
+                response_class = self.resource._meta.resource_name
+            else:
+                response_class = 'Object'
+
         return {
             'summary': extra_action.get("summary", ""),
             'httpMethod': extra_action.get('http_method', "get").upper(),
@@ -303,7 +315,7 @@ class ResourceSwaggerMapping(object):
                 method=extra_action.get('http_method'),
                 fields=extra_action.get('fields'),
                 resource_type=extra_action.get("resource_type", "view")),
-            'responseClass': 'Object', #TODO this should be extended to allow the creation of a custom object.
+            'responseClass': response_class,
             'nickname': extra_action['name'],
         }
 
@@ -494,7 +506,6 @@ class ResourceSwaggerMapping(object):
         return models
 
     def build_models(self):
-        #TODO this should be extended to allow the creation of a custom objects for extra_actions.
         models = {}
 
         # Take care of the list particular schema with meta and so on.
@@ -520,6 +531,18 @@ class ResourceSwaggerMapping(object):
                     id='%s_put' % self.resource_name
                 )
             )
+
+        # Build extra_action models
+        if hasattr(self.resource._meta, "extra_actions"):
+            for action in self.resource._meta.extra_actions:
+                if "response_class" in action and isinstance(action["response_class"], dict):
+                    models.update(
+                        self.build_model(
+                            resource_name='%s_%s' % (self.resource._meta.resource_name, action["name"]),
+                            properties=action["response_class"],
+                            id='%s_%s' % (self.resource._meta.resource_name, action["name"])
+                        )
+                    )
 
         # Actually add the related model
         models.update(
