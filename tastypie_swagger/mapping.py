@@ -248,7 +248,7 @@ class ResourceSwaggerMapping(object):
                 description=self._detail_uri_description()))
         for name, field in fields.items():
             parameters.append(self.build_parameter(
-                paramType="query",
+                paramType=field.get("paramType", "query"),
                 name=name,
                 dataType=field.get("type", "string"),
                 required=field.get("required", True),
