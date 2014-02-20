@@ -35,6 +35,7 @@ class ResourceSwaggerMapping(object):
         'post-list': "Create a new %s",
         'put-detail': "Update an existing %s",
         'delete-detail': "Delete an existing %s",
+        'patch-detail': "Partially update an existing %s",
     }
 
     def __init__(self, resource):
@@ -333,6 +334,11 @@ class ResourceSwaggerMapping(object):
             operation['parameters'].append(self.build_parameter_for_object(method='put'))
             detail_api['operations'].append(operation)
 
+        if 'patch' in self.schema['allowed_detail_http_methods']:
+            operation = self.build_detail_operation(method='patch')
+            operation['parameters'].append(self.build_parameter_for_object(method='patch'))
+            detail_api['operations'].append(operation)
+
         if 'delete' in self.schema['allowed_detail_http_methods']:
             detail_api['operations'].append(self.build_detail_operation(method='delete'))
 
@@ -398,12 +404,17 @@ class ResourceSwaggerMapping(object):
         properties = {}
 
         for name, field in self.schema['fields'].items():
-            # Exclude fields from custom put / post object definition
-            if method in ['post','put']:
+            # Exclude fields from custom put / post / patch object definition
+            if method in ['post', 'put', 'patch']:
                 if name in self.WRITE_ACTION_IGNORED_FIELDS:
                     continue
                 if field.get('readonly'):
                     continue
+            # Exclude non-updatable fields from put / patch object definition
+            if method in ['put', 'patch']:
+                if hasattr(self.resource._meta, "updatable_fields"):
+                    if name not in self.resource._meta.updatable_fields:
+                        continue
             # Deal with default format
             if isinstance(field.get('default'), fields.NOT_PROVIDED):
                 field['default'] = None
@@ -529,6 +540,15 @@ class ResourceSwaggerMapping(object):
                     properties=self.build_properties_from_fields(method='put'),
                     required=self.build_required_properties_from_fields(),
                     id='%s_put' % self.resource_name
+                )
+            )
+
+        if 'patch' in self.resource._meta.detail_allowed_methods:
+            models.update(
+                self.build_model(
+                    resource_name='%s_patch' % self.resource._meta.resource_name,
+                    properties=self.build_properties_from_fields(method='patch'),
+                    id='%s_patch' % self.resource_name
                 )
             )
 
